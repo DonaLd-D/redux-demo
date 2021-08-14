@@ -143,7 +143,356 @@ console.log(capitalizeMessage(message));
 ```
 # `Core Redux API`
 
+## Create a Redux Store
+```js
+// Import createStore here
+import {createStore} from 'redux'
+const initialState = 0;
+const countReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'increment':
+      return state + 1;
+    default:
+      return state;
+  }
+}
 
+// Create the store here
+const store=createStore(countReducer)
+```
+## Dispatch Actions to the Store
+```js
+import { createStore } from 'redux';
+
+const initialState = 0;
+const countReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'increment':
+      return state + 1;
+    case 'decrement':
+      return state-1
+    default:
+      return state;
+  }
+}
+
+const store = createStore(countReducer);
+
+// Dispatch your actions here.
+store.dispatch({type:'increment'})
+store.dispatch({type:'increment'})
+console.log(store.getState())
+store.dispatch({type:'decrement'})
+store.dispatch({type:'decrement'})
+store.dispatch({type:'decrement'})
+console.log(store.getState())
+```
+## Action Creators
+```js
+import { createStore } from 'redux';
+
+// Create your action creators here.
+const increment=()=>{
+  return {
+    type:'increment'
+  }
+}
+const decrement=()=>{
+  return {
+    type:'decrement'
+  }
+}
+
+const initialState = 0;
+const countReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'increment':
+      return state + 1;
+    case 'decrement':
+      return state - 1;
+    default:
+      return state;
+  }
+}
+
+const store = createStore(countReducer);
+
+// Modify the dispatches below.
+store.dispatch(increment());
+store.dispatch(increment());
+console.log(store.getState());
+
+store.dispatch(decrement());
+store.dispatch(decrement());
+store.dispatch(decrement());
+console.log(store.getState());
+```
+## Respond to State Changes
+```js
+import { createStore } from 'redux';
+
+const increment = () => {
+  return { type: 'increment' }
+}
+
+const decrement = () => {
+  return { type: 'decrement' }
+}
+
+const initialState = 0;
+const countReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'increment':
+      return state + 1;
+    case 'decrement':
+      return state - 1;
+    default:
+      return state;
+  }
+}
+
+const store = createStore(countReducer);
+
+// Define your change listener function here.
+const printCountStatus=()=>{
+  console.log(`The count is ${store.getState()}`);
+}
+store.subscribe(printCountStatus)
+store.dispatch(decrement()); // store.getState() === -1
+store.dispatch(increment()); // store.getState() === 0
+store.dispatch(increment()); // store.getState() === 1
+```
+## Connect the Redux Store to a UI
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="./index.css">
+	<title>Learn ReactJS</title>
+</head>
+
+<body>
+  <main id="app">
+    <p id='counter'>Waiting for current state.</p>
+    <button id='incrementer'>+</button>
+    <button id='decrementer'>-</button>
+  </main>
+	
+</body>
+<!-- Do Not Remove -->
+<script src="https://content.codecademy.com/courses/React/react-16-redux-4-bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js" integrity="sha512-P36ourTueX/PrXrD4Auc1kVLoTE7bkWrIrkaM0IG2X3Fd90LFgTRogpZzNBssay0XOXhrIgudf4wFeftdsPDiQ==" crossorigin="anonymous"></script>
+<script src="./store.js"></script>
+</html>
+```
+```js
+/* Note to learners: 
+Normally, you would import redux like this:
+
+  import { createStore } from 'redux';
+
+Due to Codecademy's technical limitations 
+for testing this exercise, we are using 
+`require()`.
+*/
+const { createStore } = require('redux');
+
+// Action Creators
+function increment() { 
+  return {type: 'increment'}
+}
+
+function decrement() { 
+  return {type: 'decrement'}
+}
+
+// Reducer / Store
+const initialState = 0;
+const countReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'increment':
+      return state + 1; 
+    case 'decrement':
+      return state - 1; 
+    default:
+      return state;
+  }
+};  
+const store = createStore(countReducer);
+
+// HTML Elements
+const counterElement = document.getElementById('counter');
+const incrementer = document.getElementById('incrementer');
+const decrementer = document.getElementById('decrementer');
+// Store State Change Listener
+const render = () => {
+  counterElement.innerHTML = store.getState();
+}
+store.subscribe(render);
+render();
+// DOM Event Handlers
+const incrementerClicked = () => {
+  store.dispatch(increment());
+}
+incrementer.addEventListener('click', incrementerClicked);
+ 
+const decrementerClicked = () => {
+  store.dispatch(decrement());
+}
+decrementer.addEventListener('click', decrementerClicked);
+
+```
+## React and Redux
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="./index.css">
+	<title>Learn ReactJS</title>
+</head>
+
+<body>
+  <div id="root">
+  </div>
+</body>
+<!-- Do Not Remove -->
+<script src="https://content.codecademy.com/courses/React/react-16-redux-4-bundle.min.js"></script>
+<script src="./store.compiled.js"></script>
+</html>
+```
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createStore } from 'redux';
+
+// REDUX CODE
+///////////////////////////////////
+
+const toggle = () => {
+  return {type: 'toggle'} 
+}
+ 
+const initialState = 'off';
+const lightSwitchReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'toggle':
+      return state === 'on' ? 'off' : 'on';
+    default:
+      return state; 
+  }
+} 
+ 
+const store = createStore(lightSwitchReducer);
+
+// REACT CODE
+///////////////////////////////////
+ 
+// Pass the store's current state as a prop to the LightSwitch component.
+const render = () => {
+  ReactDOM.render(
+    <LightSwitch 
+      state={store.getState()}
+    />,
+    document.getElementById('root')
+  )
+}
+ 
+render(); // Execute once to render with the initial state.
+store.subscribe(render); // Re-render in response to state changes.
+
+// Receive the store's state as a prop.
+function LightSwitch(props) {
+  const state = props.state; 
+
+  // Adjust the UI based on the store's current state.
+  const bgColor = state === 'on' ? 'white' : 'black';
+  const textColor = state === 'on' ? 'black' : 'white';  
+ 
+  // The click handler dispatches an action to the store.
+  const handleLightSwitchClick = () => {
+    store.dispatch(toggle());
+  }
+ 
+  return (  
+    <div style={{background : bgColor, color: textColor}}>
+      <button onClick={handleLightSwitchClick}>
+        {state}
+      </button>
+    </div>
+  )
+}
+```
+## Implementing a React+Redux App
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createStore } from 'redux';
+
+// REDUX CODE
+///////////////////////////////////
+
+const increment = () => {
+  return {type: 'increment'} 
+}
+
+const decrement = () => { 
+  return {type: 'decrement'}
+}
+
+const initialState = 0;
+const counterReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'increment':
+      return state + 1;
+    case 'decrement':
+      return state - 1;
+    default:
+      return state; 
+  }
+} 
+
+const store = createStore(counterReducer);
+
+// REACT CODE
+///////////////////////////////////
+
+const render = () => {
+  ReactDOM.render(
+    <CounterApp 
+      state={store.getState()}
+    />,
+    document.getElementById('root')
+  )
+}
+render()
+
+// Render once with the initial state.
+// Subscribe render to changes to the store's state.
+
+function CounterApp(props) {
+  const state=props.state
+  const onIncrementButtonClicked = () => {
+    // Dispatch an 'increment' action.
+    store.dispatch(increment())
+  }
+ 
+  const onDecrementButtonClicked = () => {
+    // Dispatch an 'decrement' action.
+    store.dispatch(decrement())
+  }
+  
+  return (   
+    <div id='counter-app'>
+      <h1> {state} </h1>
+      <button onClick={onIncrementButtonClicked}>+</button> 
+      <button onClick={onDecrementButtonClicked}>-</button>
+    </div>
+  )
+}
+store.subscribe(render)
+```
 ## Slices
 ```js
 const initialState={
