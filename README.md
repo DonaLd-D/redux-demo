@@ -1,4 +1,150 @@
-# Slices
+# `Core Concepts in Redux`
+
+## State
+```js
+const state=['Take Five','Claire de Lune','Respect']
+```
+
+## Actions
+```js
+onst state = [ 'Take Five', 'Claire de Lune', 'Respect' ];
+const addNewSong={
+  type:'songs/addSong',
+  payload:'Halo'
+}
+const removeSong={
+  type:'songs/removeSong',
+  payload:'Take Five'
+}
+const removeAll={
+  type:'songs/removeAll'
+}
+```
+
+## Reducers
+```js
+// Define reducer here
+const reducer=(state=initialState,action)=>{
+  switch(action.type){
+    case 'songs/addSong':
+      return [...state,action.payload]
+    case 'songs/removeSong':
+      const newState=state.filter(item=>{
+        return item!=action.payload
+      })
+      return newState
+    default:
+      return state
+  }
+}
+
+
+const initialState = [ 'Take Five', 'Claire de Lune', 'Respect' ];
+
+const addNewSong = {
+  type: 'songs/addSong',
+  payload: 'Halo'
+};
+
+const removeSong = {
+  type: 'songs/removeSong',
+  payload: 'Take Five'
+};
+
+const removeAll = {
+  type: 'songs/removeAll'
+}
+```
+## Rules of Reducers
+```js
+/ Reducer violates rule 1: 
+// They should only calculate the new state value based on the state and action arguments.
+ 
+const globalSong = 'We are the World';
+
+const playlistReducer = (state = [], action) => {
+ switch (action.type) {
+   case 'songs/addGlobalSong': {
+     return [...state, action.payload];
+   }
+   default:
+     return state;
+ }
+}
+ 
+// Example call to reducer
+const state = [ 'Take Five', 'Claire de Lune', 'Respect' ];
+const addAction = { type: 'songs/addGlobalSong', payload: 'We are the World' };
+const newState = playlistReducer(state, addAction);
+```
+```js
+// Reducer violates rule 2: 
+// They are not allowed to modify the existing state. 
+// Instead, they must copy the existing state and make changes to the copied values.
+
+const todoReducer = (state = [], action) => {
+ switch (action.type) {
+   case 'todos/addTodo': {
+     return [...state,action.payload];
+   }
+   case 'todos/removeAll': {
+     return [];
+   }
+   default: {
+     return state;
+   }
+ }
+}
+
+// Example call to reducer
+const state = [ 'Print trail map', 'Pack snacks', 'Summit the mountain' ];
+const addTodoAction = { type: 'todos/addTodo', payload: 'Descend' };
+const newState = todoReducer(state, addTodoAction);
+```
+```js
+// Reducer violates rule 3:
+ // They must not do any asynchronous logic or have other “side effects”.
+
+const initialState = [0, 1, 2];
+
+const reducer = (state = initialState, action) => {
+ switch (action.type) {
+   case 'numbers/addRandom': {
+     return [...state, action.payload];
+   }
+   default: {
+     return state;
+   }
+ }
+}
+ 
+// Example call to reducer
+const state=[1,2,3]
+const randomAction = { type: 'numbers/addRandom', payload: Math.random() };
+const newState = reducer(state, randomAction);
+```
+## Immutable Updates and Pure Functions
+```js
+const removeItemAtIndex = (list, index) => {
+ let left=list.slice(0, index)
+ let right=list.slice(index+1)
+ return [...left,...right]
+};
+
+console.log(removeItemAtIndex(['a', 'b', 'c', 'd'], 1));
+```
+```js
+const fs = require('fs');
+const file = './data.txt';
+
+const message = fs.readFileSync(file, 'utf8');
+const capitalizeMessage = (message) =>message.toUpperCase()
+console.log(capitalizeMessage(message));
+```
+# `Core Redux API`
+
+
+## Slices
 ```js
 const initialState={
   allRecipes:[],
@@ -7,7 +153,7 @@ const initialState={
 }
 ```
 
-# Actions and Payloads For Complex State
+## Actions and Payloads For Complex State
 ```js
 const allRecipesData = [
   { id: 0, name: 'Biscuits', img: 'img/biscuits.jpg'},
@@ -81,7 +227,7 @@ const removeRecipe = (recipe) => {
 
 ```
 
-# Immutable Updates & Complex State
+## Immutable Updates & Complex State
 ```js
 // The data has been reduced to make the output
 // terminal easier to read.
@@ -200,7 +346,7 @@ function printTests() {
 
 ```
 
-# Reducer Composition
+## Reducer Composition
 ```js
 /* 
 Notice that, for each recognized action type, the entire
@@ -342,7 +488,7 @@ const store = createStore(rootReducer);
 
 ```
 
-# combineReducers
+## combineReducers
 ```js
 const allRecipesData = [
   { id: 0, name: 'Biscuits', img: 'img/biscuits.jpg'},
