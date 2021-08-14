@@ -945,3 +945,213 @@ const reducers={
 const rootReducer=combineReducers(reducers)
 const store=createStore(rootReducer)
 ```
+## A File Structure for Redux
+```js
+export const addRecipe = (recipe) => {
+  return { 
+    type: 'favoriteRecipes/addRecipe', 
+    payload: recipe 
+  };
+}
+
+export const removeRecipe = (recipe) => {
+  return { 
+    type: 'favoriteRecipes/removeRecipe', 
+    payload: recipe 
+  };
+}
+ 
+const initialFavoriteRecipes = [];
+export const favoriteRecipesReducer = (favoriteRecipes = initialFavoriteRecipes, action) => {
+  switch(action.type) {
+    case 'favoriteRecipes/addRecipe':
+      return [...favoriteRecipes, action.payload]
+    case 'favoriteRecipes/removeRecipe':
+      return favoriteRecipes.filter(recipe => {
+        return recipe.id !== action.payload.id
+      });
+    default:
+      return favoriteRecipes;
+  }
+}
+```
+```js
+import { createStore, combineReducers } from 'redux';
+import {favoriteRecipesReducer} from '../features/favoriteRecipes/favoriteRecipesSlice.js'
+import {allRecipesReducer} from '../features/allRecipes/allRecipesSlice.js'
+import {searchTermReducer} from '../features/searchTerm/searchTermSlice.js'
+// Import the slice reducers here.
+
+const reducers = {
+  // Add the slice properties here
+  favoriteRecipes:favoriteRecipesReducer,
+  allRecipes:allRecipesReducer,
+  searchTerm:searchTermReducer
+}
+
+// Declare the store here.
+const store=createStore(combineReducers(reducers))
+
+export default store
+```
+
+## Passing Store Data Through the Top-Level React Component
+```js
+import React from 'react';
+
+import { AllRecipes } from '../features/allRecipes/AllRecipes.js';
+import { SearchTerm } from '../features/searchTerm/SearchTerm.js';
+
+export function App(props) {
+  const {state, dispatch} = props;
+
+  const visibleAllRecipes = getFilteredRecipes(state.allRecipes, state.searchTerm);
+  const visibleFavoriteRecipes = getFilteredRecipes(state.favoriteRecipes, state.searchTerm);
+
+// You'll add the <FavoriteRecipes /> component in the next exercise!
+  return (
+    <main>
+      <section>
+        <SearchTerm
+          searchTerm={state.searchTerm}
+          dispatch={dispatch}
+        />
+      </section>
+      <section>
+        <h2>Favorite Recipes</h2>
+        
+      </section>
+      <hr />
+      <section>
+        <h2>All Recipes</h2>
+        <AllRecipes
+          allRecipes={visibleAllRecipes} 
+          dispatch={dispatch}
+        />
+      </section>
+    </main>
+  )
+}
+
+/* Utility Helpers */
+
+function getFilteredRecipes(recipes, searchTerm) {
+  return recipes.filter(recipe => recipe.name.toLowerCase().includes(searchTerm.toLowerCase()));
+}
+```
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {store} from './app/store.js'
+import { App } from './app/App.js';
+// Import 'store' here.
+
+
+const render = () => {
+  // Pass `state` and `dispatch` props to <App />
+  ReactDOM.render(
+    <App 
+    state={store.getState()}
+    dispatch={store.dispatch}
+    />,
+    document.getElementById('root')
+  )
+}
+render();
+// Subscribe render to changes to the `store`
+store.subscribe(render)
+```
+
+## Using Store Data Within Feature Components
+```js
+import React from 'react';
+import FavoriteButton from "../../components/FavoriteButton";
+import Recipe from "../../components/Recipe";
+const unfavoriteIconUrl = 'https://static-assets.codecademy.com/Courses/Learn-Redux/Recipes-App/icons/unfavorite.svg'
+import {removeRecipe} from './favoriteRecipesSlice.js'
+// Import removeRecipe from favoriteRecipesSlice.js
+
+export const FavoriteRecipes = (props) =>{
+  
+  // Extract dispatch and favoriteRecipes from props.
+  const {dispatch,favoriteRecipes}=props
+  const onRemoveRecipeHandler = (recipe) => {
+    // Dispatch a removeRecipe() action.
+    dispatch(removeRecipe(recipe))
+  };
+
+  // Map the recipe objects in favoriteRecipes to render <Recipe /> components.
+  return (
+    <div id='favorite-recipes' className="recipes-container">
+      {favoriteRecipes.map(createRecipeComponent)}
+    </div>
+  );
+
+  // Helper Function
+  function createRecipeComponent(recipe) {
+    return (
+      <Recipe recipe={recipe} key={recipe.id}>
+        <FavoriteButton
+          onClickHandler={() => onRemoveRecipeHandler(recipe)}
+          icon={unfavoriteIconUrl}
+        >
+          Remove Favorite
+        </FavoriteButton>
+      </Recipe>
+    )
+  }
+  
+};
+```
+```js
+import React from 'react';
+import {FavoriteRecipes} from '../features/favoriteRecipes/FavoriteRecipes.js'
+import { AllRecipes } from '../features/allRecipes/AllRecipes.js';
+import { SearchTerm } from '../features/searchTerm/SearchTerm.js';
+
+// Import the FavoriteRecipes component here.
+
+export function App(props) {
+  const {state, dispatch} = props;
+
+  const visibleAllRecipes = getFilteredRecipes(state.allRecipes, state.searchTerm);
+  const visibleFavoriteRecipes = getFilteredRecipes(state.favoriteRecipes, state.searchTerm);
+
+  // Render the <FavoriteRecipes /> component.
+  // Pass `dispatch` and `favoriteRecipes` props.
+  return (
+    <main>
+      <section>
+        <SearchTerm
+          searchTerm={state.searchTerm}
+          dispatch={dispatch}
+        />
+      </section>
+      <section>
+        <h2>Favorite Recipes</h2>
+        <FavoriteRecipes
+        favoriteRecipes={visibleFavoriteRecipes}
+        dispatch={dispatch}
+        />
+      </section>
+      <hr />
+      <section>
+        <h2>All Recipes</h2>
+        <AllRecipes
+          allRecipes={visibleAllRecipes} 
+          dispatch={dispatch}
+        />
+      </section>
+    </main>
+  )
+}
+
+/* Utility Helpers */
+
+function getFilteredRecipes(recipes, searchTerm) {
+  return recipes.filter(recipe => recipe.name.toLowerCase().includes(searchTerm.toLowerCase()));
+}
+```
+
+# `Connect to React with React Redux`
