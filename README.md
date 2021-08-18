@@ -1155,3 +1155,307 @@ function getFilteredRecipes(recipes, searchTerm) {
 ```
 
 # `Connect to React with React Redux`
+## The `<Provider>` Component
+```js
+import React from 'react';
+
+import { loadData } from '../features/allRecipes/allRecipesSlice.js';
+import { AllRecipes } from '../features/allRecipes/AllRecipes.js';
+import { SearchTerm } from '../features/searchTerm/SearchTerm.js';
+import { FavoriteRecipes } from '../features/favoriteRecipes/FavoriteRecipes.js';
+
+export function App() {
+  return (
+    <main>
+      <section>
+        <SearchTerm />
+      </section>
+      <section>
+        <h2>Favorite Recipes</h2>
+        <FavoriteRecipes />
+      </section>
+      <hr />
+      <section>
+        <h2>All Recipes</h2>
+        <AllRecipes />
+      </section>
+    </main>
+  )
+}
+```
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+// Import Provider component below.
+import {Provider} from 'react-redux'
+
+import { App } from './app/App.js';
+import { store } from './app/store.js';
+
+ReactDOM.render(
+  // Wrap root application with Provider component below.
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root')
+);
+```
+
+## Selectors
+```js
+const initialState = ''
+
+export const searchTermReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'searchTerm/setSearchTerm':
+      return action.payload;
+    case 'searchTerm/clearSearchTerm':
+      return '';
+    default:
+      return state;
+  }
+}
+
+export function setSearchTerm(term) {
+  return {
+    type: 'searchTerm/setSearchTerm',
+    payload: term
+  }
+}
+
+export function clearSearchTerm() {
+  return {
+    type: 'searchTerm/clearSearchTerm'
+  }
+}
+
+export const selectSearchTerm = (state) => state.searchTerm;
+```
+
+```js
+import allRecipesData from '../../../data.js'
+import { selectSearchTerm } from '../searchTerm/searchTermSlice.js';
+
+export const loadData = () => {
+  return {
+    type: 'allRecipes/loadData',
+    payload: allRecipesData
+  }
+}
+
+const initialState = [];
+export const allRecipesReducer = (allRecipes = initialState, action) => {
+  switch (action.type) {
+    case 'allRecipes/loadData':
+      return action.payload;
+    case 'favoriteRecipes/addRecipe':
+      return allRecipes.filter(recipe => recipe.id !== action.payload.id);
+    case 'favoriteRecipes/removeRecipe':
+      return [...allRecipes, action.payload]
+    default:
+      return allRecipes;
+  }
+}
+
+// Implement the selectors below.
+export const selectAllRecipes=(state)=>state.allRecipes
+export const selectFilteredAllRecipes=(state)=>{
+  const allRecipes=selectAllRecipes(state)
+  const searchTerm=selectSearchTerm(state)
+  return allRecipes.filter(recipe => recipe.name.toLowerCase().includes(searchTerm.toLowerCase()))
+}
+
+// This code is for testing the seletors only.
+const testState = {
+  allRecipes: allRecipesData,
+  searchTerm: 'ch'
+}
+
+const testSelectAllRecipes = () => {
+  console.log('All Recipes')
+  console.log(selectAllRecipes(testState));
+}
+
+const testSelectFilteredAllRecipes = () => {
+  console.log('\nRecipes filtered by searchTerm')
+  console.log(selectFilteredAllRecipes(testState));
+}
+
+// Uncomment these to test each selector.
+testSelectAllRecipes();
+testSelectFilteredAllRecipes(); 
+```
+
+## The `useSelector()` Hook
+```js
+
+import React, { useEffect } from 'react';
+// Implement the import statements below.
+import {useSelector} from 'react-redux'
+
+// Add the selector to the below import statement 
+import { loadData,selectFilteredAllRecipes } from './allRecipesSlice.js';
+import { addRecipe } from '../favoriteRecipes/favoriteRecipesSlice.js';
+import FavoriteButton from "../../components/FavoriteButton";
+import Recipe from "../../components/Recipe";
+const favoriteIconURL = 'https://static-assets.codecademy.com/Courses/Learn-Redux/Recipes-App/icons/favorite.svg';
+
+export const AllRecipes = () => {
+  // Implement allRecipes variable below.
+  const allRecipes=useSelector(selectFilteredAllRecipes)
+  
+  const onFirstRender = () => {
+    // dispatch(loadData());
+  }
+  useEffect(onFirstRender, []);
+
+  const onAddRecipeHandler = (recipe) => {
+    // dispatch(addRecipe(recipe));
+  };
+
+  return (
+    <div className="recipes-container">
+      {allRecipes.map((recipe) => (
+        <Recipe recipe={recipe} key={recipe.id}>
+          <FavoriteButton
+            onClickHandler={() => onAddRecipeHandler(recipe)}
+            icon={favoriteIconURL}
+          >
+            Add to Favorites
+          </FavoriteButton>
+        </Recipe>
+      ))}
+    </div>
+  );
+};
+```
+
+## The `useDispatch()` Hook
+```js
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { setSearchTerm, clearSearchTerm, selectSearchTerm } from './searchTermSlice.js';
+const searchIconUrl = 'https://static-assets.codecademy.com/Courses/Learn-Redux/Recipes-App/icons/search.svg';
+const clearIconUrl = 'https://static-assets.codecademy.com/Courses/Learn-Redux/Recipes-App/icons/clear.svg';
+
+
+export const SearchTerm = () => {
+  const searchTerm = useSelector(selectSearchTerm);
+  const dispatch = useDispatch();
+
+  const onSearchTermChangeHandler = (e) => {
+    const userInput = e.target.value;
+    dispatch(setSearchTerm(userInput));
+  };
+  
+  const onClearSearchTermHandler = () => {
+    dispatch(clearSearchTerm());
+  };
+
+  return (
+    <div id="search-container">
+      <img id="search-icon" alt="" src={searchIconUrl} />
+      <input
+        id="search"
+        type="text"
+        value={searchTerm}
+        onChange={onSearchTermChangeHandler}
+        placeholder="Search recipes"
+      />
+      {searchTerm.length > 0 && (
+        <button
+          onClick={onClearSearchTermHandler}
+          type="button"
+          id="search-clear-button"
+        >
+          <img src={clearIconUrl} alt="" />
+        </button>
+      )}
+    </div>
+  );
+};
+```
+
+```js
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { removeRecipe, selectFilteredFavoriteRecipes } from './favoriteRecipesSlice.js';
+import FavoriteButton from "../../components/FavoriteButton";
+import Recipe from "../../components/Recipe";
+const unfavoriteIconUrl = 'https://static-assets.codecademy.com/Courses/Learn-Redux/Recipes-App/icons/unfavorite.svg';
+
+export const FavoriteRecipes = () =>{
+  const favoriteRecipes = useSelector(selectFilteredFavoriteRecipes);
+  const dispatch = useDispatch();
+
+  const onRemoveRecipeHandler = (recipe) => {
+    // Dispatch the action below.
+    dispatch(removeRecipe(recipe))
+  };
+
+  return (
+    <div className="recipes-container">
+      {favoriteRecipes.map(createRecipeComponent)}
+    </div>
+  );
+
+  // Helper Function
+  function createRecipeComponent(recipe) {
+    return (
+      <Recipe recipe={recipe} key={recipe.id}>
+        <FavoriteButton
+          onClickHandler={() => onRemoveRecipeHandler(recipe)}
+          icon={unfavoriteIconUrl}
+        >
+          Remove Favorite
+        </FavoriteButton>
+      </Recipe>
+    )
+  } 
+};
+```
+
+```JS
+import React, { useEffect } from 'react';
+// Add useDispatch to the import statement below.
+import { useSelector,useDispatch } from 'react-redux';
+
+import { addRecipe } from '../favoriteRecipes/favoriteRecipesSlice.js';
+import { loadData, selectFilteredAllRecipes } from './allRecipesSlice.js';
+import FavoriteButton from "../../components/FavoriteButton";
+import Recipe from "../../components/Recipe";
+const favoriteIconURL = 'https://static-assets.codecademy.com/Courses/Learn-Redux/Recipes-App/icons/favorite.svg';
+
+export const AllRecipes = () => {
+  const allRecipes = useSelector(selectFilteredAllRecipes);
+  // Implement dispatch variable below.
+  const dispatch=useDispatch()
+
+  const onFirstRender = () => {
+    dispatch(loadData());
+  }
+  useEffect(onFirstRender, []);
+  
+  const onAddRecipeHandler = (recipe) => {
+    dispatch(addRecipe(recipe));
+  };
+
+  return (
+    <div className="recipes-container">
+      {allRecipes.map((recipe) => (
+        <Recipe recipe={recipe} key={recipe.id}>
+          <FavoriteButton
+            onClickHandler={() => onAddRecipeHandler(recipe)}
+            icon={favoriteIconURL}
+          >
+            Add to Favorites
+          </FavoriteButton>
+        </Recipe>
+      ))}
+    </div>
+  );
+};
+```
